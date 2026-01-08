@@ -2,6 +2,11 @@
 
 [README_EN.md](README_EN.md)
 
+策略 IPFS CID：QmdZKy7rSAiRfRMpLvHGuVnWB8ENMDoGsQ6i3QGjqbzwMe
+
+https://bafybeihcd2u6rsjtsq2rghuas3ln6jwbevfhktjbmugvgi4fb7p3osfsju.ipfs.dweb.link?filename=times.py
+
+https://ipfs.io/ipns/k51qzi5uqu5djmgq90q9fhqmd2yxqhvqj8by1no448ulflqtygv2cv6j9vge3i
 
 Upd: 在笔者受到威胁后，现在进一步开源我们在去中心化金融（DeFi）方面的工作。[使用金融数学方法在 Uniswap v4 中通过 Hooks 机制避免 JIT 攻击](20251226.pdf)
 
