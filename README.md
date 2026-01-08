@@ -23,3 +23,7 @@ AlphaGPT 是一套基于深度学习算法与符号回归的量化因子挖掘�
 国债十年
 
 ![](backtest_2.png)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=imbue-bit/AlphaGPT&type=date&legend=top-left)](https://www.star-history.com/#imbue-bit/AlphaGPT&type=date&legend=top-left)
