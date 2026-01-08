@@ -2,6 +2,10 @@
 
 > Disclaimer: This repository is for research and educational purposes only. The author assumes no legal liability for any trading losses or systemic Alpha decay caused by the use of this code.
 
+## Warning
+
+该框架仅适用于趋势风格的市场。请勿在成长风格市场尝试。
+
 ## Abstract
 
 AlphaGPT 是一套基于深度学习算法与符号回归的量化因子挖掘框架。通过构建非线性、高阶的特征组合，在 A 股回测中表现出极强的鲁棒性与超额收益捕捉能力。
