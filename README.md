@@ -1,5 +1,14 @@
 # AlphaGPT
 
+## OH! NO!
+
+Upd 2026.01.08: 笔者的 GitHub 仓库可能无法更新了!
+
+![](funny_1.png)
+![](funny_2.png)
+![](funny_3.png)
+![](funny_4.png)
+
 > Disclaimer: This repository is for research and educational purposes only. The author assumes no legal liability for any trading losses or systemic Alpha decay caused by the use of this code.
 
 ## Abstract
