@@ -15,3 +15,11 @@ AlphaGPT 是一套基于深度学习算法与符号回归的量化因子挖掘�
 欢迎社区共同参与，加速该策略在 A 股市场的熵增过程。
 
 ## This was their money-making machine. Now it's your public library.
+
+中证1000
+
+![](backtest.png)
+
+国债十年
+
+![](backtest_2.png)
