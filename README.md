@@ -1,7 +1,7 @@
 # AlphaGPT
 
 > [!IMPORTANT]
-> GitHub 的 Issue 并非被用于设计打卡！
+> GitHub 的 Issue 并非被设计为打卡工具！
 
 > [!IMPORTANT]
 > 若您在加密市场进行交易，另可参考 [Defense in Predatory Markets: A Differential Game Framework for AMM Liquidity via Uniswap V4 Hooks](https://github.com/imbue-bit/AlphaGPT/blob/main/paper/20251226.pdf) 进行做市。笔者懒得向会议投稿了。若有疑问，请联系 imbue2025@outlook.com.
