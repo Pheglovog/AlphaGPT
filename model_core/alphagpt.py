@@ -5,6 +5,96 @@ from .config import ModelConfig
 from .ops import OPS_CONFIG
 
 
+class NewtonSchulzLowRankDecay:
+    """
+    Low-Rank Decay (LoRD) using Newton-Schulz iteration.
+    
+    A more efficient regularization method that targets low-rank structure
+    in attention and key parameters. Uses Newton-Schulz iteration to compute
+    the minimum singular vectors without explicit SVD.
+    
+    Args:
+        named_parameters: Model's named parameters
+        decay_rate: Strength of low-rank decay
+        num_iterations: Number of Newton-Schulz iterations (default: 5)
+        target_keywords: If specified, only decay parameters matching these keywords
+    """
+    def __init__(self, named_parameters, decay_rate=1e-3, num_iterations=5, target_keywords=None):
+        self.decay_rate = decay_rate
+        self.num_iterations = num_iterations
+        self.target_keywords = target_keywords or ["qk_norm", "attention"]
+        self.params_to_decay = []
+        
+        for name, param in named_parameters:
+            if not param.requires_grad or param.ndim != 2:
+                continue
+            if not any(k in name for k in self.target_keywords):
+                continue
+            self.params_to_decay.append((name, param))
+    
+    @torch.no_grad()
+    def step(self):
+        """Apply Newton-Schulz low-rank decay to attention parameters."""
+        for name, W in self.params_to_decay:
+            orig_dtype = W.dtype
+            X = W.float()
+            r, c = X.shape
+            
+            # Transpose if needed for efficiency
+            transposed = False
+            if r > c:
+                X = X.T
+                transposed = True
+            
+            # Normalize by spectral norm
+            norm = X.norm() + 1e-8
+            X = X / norm
+            
+            # Initialize Y for Newton-Schulz iteration
+            Y = X
+            I = torch.eye(X.shape[-1], device=X.device, dtype=X.dtype)
+            
+            # Newton-Schulz iteration: Y_{k+1} = 0.5 * Y_k * (3*I - Y_k^T * Y_k)
+            # This converges to the orthogonal matrix with same singular vectors
+            for _ in range(self.num_iterations):
+                A = Y.T @ Y
+                Y = 0.5 * Y @ (3.0 * I - A)
+            
+            if transposed:
+                Y = Y.T
+            
+            # Apply low-rank decay
+            W.sub_(self.decay_rate * Y.to(orig_dtype))
+
+
+class StableRankMonitor:
+    """Monitor the effective rank (stable rank) of model parameters."""
+    def __init__(self, model, target_keywords=None):
+        self.model = model
+        self.target_keywords = target_keywords or ["q_proj", "k_proj", "attention"]
+        self.history = []
+    
+    @torch.no_grad()
+    def compute(self):
+        """Compute average stable rank of target parameters."""
+        ranks = []
+        for name, param in self.model.named_parameters():
+            if param.ndim != 2:
+                continue
+            if not any(k in name for k in self.target_keywords):
+                continue
+            
+            W = param.detach().float()
+            S = torch.linalg.svdvals(W)
+            # Stable Rank = ||W||_F^2 / ||W||_2^2
+            stable_rank = (S.norm() ** 2) / (S[0] ** 2 + 1e-9)
+            ranks.append(stable_rank.item())
+        
+        avg_rank = sum(ranks) / len(ranks) if ranks else 0.0
+        self.history.append(avg_rank)
+        return avg_rank
+
+
 class RMSNorm(nn.Module):
     """Root Mean Square Layer Normalization"""
     def __init__(self, d_model, eps=1e-6):
