@@ -1,0 +1,129 @@
+# AlphaQuant 配置文件
+
+# 数据源配置
+data:
+  # Tushare Pro
+  tushare_token: ""  # 从 https://tushare.pro 获取
+  enable_tushare: true
+
+  # Tushare 并发控制（根据账号等级调整）
+  # 免费版(120积分): 2
+  # 2000积分: 5
+  # 5000积分: 10
+  tushare_concurrent_limit: 2
+
+  # AkShare (可选）
+  enable_akshare: false
+
+  # MongoDB 存储
+  mongodb_uri: "mongodb://localhost:27017/"
+  mongodb_db: "alphaquant"
+
+  # 数据更新
+  update_interval_hours: 6
+  keep_days: 365
+
+# 模型配置
+model:
+  # 模型维度
+  d_model: 128
+  nhead: 8
+  num_layers: 4
+  dim_feedforward: 512
+  dropout: 0.1
+
+  # 词汇表
+  num_basic_factors: 6
+  num_advanced_factors: 18
+  max_formula_len: 64
+
+  # 训练参数
+  learning_rate: 0.0001
+  batch_size: 32
+  num_epochs: 100
+  warmup_steps: 1000
+
+  # 生成参数
+  temperature: 1.0
+  top_k: 10
+  max_generate_length: 32
+
+# 回测配置
+backtest:
+  initial_capital: 1000000.0  # 初始资金 100万
+  commission_rate: 0.0003     # 万三佣金
+  enable_slippage: true
+  enable_t_plus_one: true     # T+1 交易
+
+  # 交易规则
+  main_limit_rate: 0.10       # 主板涨跌停 10%
+  star_limit_rate: 0.20       # 创业板 20%
+  tech_limit_rate: 0.20       # 科创板 20%
+  bj_limit_rate: 0.30         # 北交所 30%
+  st_limit_rate: 0.05         # ST 股 5%
+
+# 策略配置
+strategy:
+  max_positions: 5           # 最大持仓数
+  position_size_percent: 0.2  # 单个仓位 20%
+
+  # 止损止盈
+  stop_loss_percent: 0.05    # 5% 止损
+  take_profit_percent: 0.20   # 20% 止盈
+  trailing_stop_percent: 0.08 # 8% 回撤止盈
+
+  # 选股过滤
+  min_market_cap: 10000000000  # 最小市值 100亿
+  min_volume: 1000000         # 最小成交量 100万股
+  min_price: 5.0             # 最低价格 5元
+  max_price: 1000.0           # 最高价格 1000元
+
+  # 信号阈值
+  buy_threshold: 0.7         # 买入阈值
+  sell_threshold: 0.3        # 卖出阈值
+
+# 交易执行配置
+execution:
+  # 模拟交易
+  simulate: true
+
+  # OpenCTP (期货）
+  ctp:
+    broker_id: ""
+    investor_id: ""
+    password: ""
+    td_address: ""
+    md_address: ""
+
+  # 券商 API (股票）
+  broker:
+    name: "eastmoney"  # eastmoney, gtja, etc.
+    account: ""
+    password: ""
+    trade_server: ""
+    quote_server: ""
+
+# 风控配置
+risk:
+  max_daily_loss_percent: 0.02  # 单日最大亏损 2%
+  max_total_loss_percent: 0.10   # 总最大亏损 10%
+
+  # 仓位风控
+  max_single_position_percent: 0.3  # 单个最大仓位 30%
+  max_total_position_percent: 0.8   # 总最大仓位 80%
+
+# 日志配置
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/alphaquant.log"
+  rotation: 100 MB
+  retention: 30 days
+
+# 面板配置
+dashboard:
+  host: "0.0.0.0"
+  port: 8501
+  refresh_interval: 5  # 秒
+
+# 开发模式
+debug: false
