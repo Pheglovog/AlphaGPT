@@ -153,6 +153,29 @@ class TushareProProvider:
             # 所有重试失败
             return {}
 
+    def _to_dataframe(self, data: Dict) -> pd.DataFrame:
+        """
+        将 Tushare API 响应转换为 DataFrame
+
+        Args:
+            data: API 响应的 data 字段
+
+        Returns:
+            DataFrame
+        """
+        if not data:
+            return pd.DataFrame()
+
+        fields = data.get('fields', [])
+        items = data.get('items', [])
+
+        if not fields or not items:
+            return pd.DataFrame()
+
+        # 创建 DataFrame
+        df = pd.DataFrame(items, columns=fields)
+        return df
+
     async def get_stock_list(self, exchange: str = 'SSE') -> pd.DataFrame:
         """
         获取股票列表
@@ -169,22 +192,7 @@ class TushareProProvider:
         }
 
         data = await self._request('stock_basic', params)
-
-        if not data:
-            return pd.DataFrame()
-
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'symbol': data['items'][1],
-            'name': data['items'][2],
-            'area': data['items'][3],
-            'industry': data['items'][4],
-            'market': data['items'][5],
-            'list_date': data['items'][6]
-        })
-
-        df['list_date'] = pd.to_datetime(df['list_date'], format='%Y%m%d')
-        return df
+        return self._to_dataframe(data)
 
     async def get_daily_quotes(
         self,
@@ -213,26 +221,13 @@ class TushareProProvider:
         }
 
         data = await self._request('daily', params)
+        df = self._to_dataframe(data)
 
-        if not data:
-            return pd.DataFrame()
+        if not df.empty and 'trade_date' in df.columns:
+            df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
+            df = df.sort_values('trade_date')
 
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'trade_date': data['items'][1],
-            'open': data['items'][2],
-            'high': data['items'][3],
-            'low': data['items'][4],
-            'close': data['items'][5],
-            'pre_close': data['items'][6],
-            'change': data['items'][7],
-            'pct_chg': data['items'][8],
-            'vol': data['items'][9],
-            'amount': data['items'][10]
-        })
-
-        df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
-        return df.sort_values('trade_date')
+        return df
 
     async def get_daily_quotes_batch(
         self,
@@ -296,31 +291,13 @@ class TushareProProvider:
         }
 
         data = await self._request('daily_basic', params)
+        df = self._to_dataframe(data)
 
-        if not data:
-            return pd.DataFrame()
+        if not df.empty and 'trade_date' in df.columns:
+            df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
+            df = df.sort_values('trade_date')
 
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'trade_date': data['items'][1],
-            'turnover_rate': data['items'][2],
-            'volume_ratio': data['items'][3],
-            'pe': data['items'][4],
-            'pe_ttm': data['items'][5],
-            'pb': data['items'][6],
-            'ps': data['items'][7],
-            'ps_ttm': data['items'][8],
-            'dv_ratio': data['items'][9],
-            'dv_ttm': data['items'][10],
-            'total_share': data['items'][11],
-            'float_share': data['items'][12],
-            'free_share': data['items'][13],
-            'total_mv': data['items'][14],
-            'circ_mv': data['items'][15]
-        })
-
-        df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
-        return df.sort_values('trade_date')
+        return df
 
     async def get_money_flow(
         self,
@@ -343,33 +320,13 @@ class TushareProProvider:
         }
 
         data = await self._request('moneyflow', params)
+        df = self._to_dataframe(data)
 
-        if not data:
-            return pd.DataFrame()
+        if not df.empty and 'trade_date' in df.columns:
+            df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
+            df = df.sort_values('trade_date')
 
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'trade_date': data['items'][1],
-            'buy_lg_vol': data['items'][2],
-            'buy_lg_amount': data['items'][3],
-            'sell_lg_vol': data['items'][4],
-            'sell_lg_amount': data['items'][5],
-            'buy_elg_vol': data['items'][6],
-            'buy_elg_amount': data['items'][7],
-            'sell_elg_vol': data['items'][8],
-            'sell_elg_amount': data['items'][9],
-            'buy_md_vol': data['items'][10],
-            'buy_md_amount': data['items'][11],
-            'sell_md_vol': data['items'][12],
-            'sell_md_amount': data['items'][13],
-            'buy_sm_vol': data['items'][14],
-            'buy_sm_amount': data['items'][15],
-            'sell_sm_vol': data['items'][16],
-            'sell_sm_amount': data['items'][17]
-        })
-
-        df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
-        return df.sort_values('trade_date')
+        return df
 
     async def get_limit_list(self, trade_date: str = '') -> pd.DataFrame:
         """
@@ -387,32 +344,13 @@ class TushareProProvider:
         }
 
         data = await self._request('limit_list', params)
+        df = self._to_dataframe(data)
 
-        if not data:
-            return pd.DataFrame()
+        if not df.empty and 'trade_date' in df.columns:
+            df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
+            df = df.sort_values('pct_chg', ascending=False)
 
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'trade_date': data['items'][1],
-            'name': data['items'][2],
-            'close': data['items'][3],
-            'pct_chg': data['items'][4],
-            'amplitude': data['items'][5],
-            'up_limit': data['items'][6],
-            'down_limit': data['items'][7],
-            'open_times': data['items'][8],
-            'limit_times': data['items'][9],
-            'fd_amount': data['items'][10],
-            'first_time': data['items'][11],
-            'last_time': data['items'][12],
-            'open_amount': data['items'][13],
-            'limit_amount': data['items'][14],
-            'lmt_ma': data['items'][15],
-            'lmt_ma_5': data['items'][16]
-        })
-
-        df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
-        return df.sort_values('pct_chg', ascending=False)
+        return df
 
     async def get_index_daily(self, ts_code: str = '000001.SH', start_date: str = '', end_date: str = '') -> pd.DataFrame:
         """
@@ -433,23 +371,13 @@ class TushareProProvider:
         }
 
         data = await self._request('index_daily', params)
+        df = self._to_dataframe(data)
 
-        if not data:
-            return pd.DataFrame()
+        if not df.empty and 'trade_date' in df.columns:
+            df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
+            df = df.sort_values('trade_date')
 
-        df = pd.DataFrame({
-            'ts_code': data['items'][0],
-            'trade_date': data['items'][1],
-            'close': data['items'][2],
-            'open': data['items'][3],
-            'high': data['items'][4],
-            'low': data['items'][5],
-            'vol': data['items'][6],
-            'amount': data['items'][7]
-        })
-
-        df['trade_date'] = pd.to_datetime(df['trade_date'], format='%Y%m%d')
-        return df.sort_values('trade_date')
+        return df
 
 
 class TushareDataManager:
