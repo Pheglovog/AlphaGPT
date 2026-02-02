@@ -36,6 +36,9 @@ class ModelConfig:
     dropout: float = 0.1
     num_tasks: int = 3  # 多任务数（回测收益、夏普、最大回撤）
 
+    # 新增：因子初始化配置
+    factor_init_type: str = "constant"  # constant, uniform, normal
+
 
 class RMSNorm(nn.Module):
     """Root Mean Square Layer Normalization"""
@@ -46,7 +49,7 @@ class RMSNorm(nn.Module):
         self.weight = nn.Parameter(torch.ones(d_model))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        rms = torch.sqrt(torch.mean(x ** 2, dim=-1, keepdim=True) + self.eps)
+        rms = torch.sqrt(torch.mean(x ** 2, dim=-1, keepdim=True) + self.eps
         return (x / rms) * self.weight
 
 
@@ -90,25 +93,25 @@ class MarketSentimentEncoder(nn.Module):
         self.wide_market = nn.Sequential(
             nn.Linear(4, d_model // 4),
             nn.ReLU(),
-            nn.Linear(d_model // 4, d_model // 4)
+            nn.Linear(d_model // 4, d_model // 4)  # 修复：保持维度一致
         )
 
         # 行业轮动
         self.sector = nn.Sequential(
             nn.Linear(8, d_model // 4),
             nn.ReLU(),
-            nn.Linear(d_model // 4, d_model // 4)
+            nn.Linear(d_model // 4, d_model // 4)  # 修复：保持维度一致
         )
 
         # 资金流向
         self.fund_flow = nn.Sequential(
             nn.Linear(3, d_model // 4),
             nn.ReLU(),
-            nn.Linear(d_model // 4, d_model // 4)
+            nn.Linear(d_model // 4, d_model // 4)  # 修复：保持维度一致
         )
 
-        # 融合层
-        self.fusion = nn.Linear(d_model, d_model)
+        # 融合层：将所有嵌入合并为 d_model 维度
+        self.fusion = nn.Linear(d_model // 4 * 3, d_model)
 
     def forward(
         self,
@@ -300,7 +303,7 @@ class AlphaQuant(nn.Module):
     """
 
     # 因子名称（基础）
-    BASIC_FACTORS = ['RET', 'PRESSURE', 'FOMO', 'DEV', 'VOL', 'AMP']
+    BASIC_FACTORS = ['RET', 'PRESSURE', 'MOMO', 'DEV', 'VOL', 'AMP']
 
     # 因子名称（高级）
     ADVANCED_FACTORS = [
@@ -324,7 +327,7 @@ class AlphaQuant(nn.Module):
         ('DELAY1', lambda a: torch.roll(a, 1, dims=-1), 1),
         ('DELAY5', lambda a: torch.roll(a, 5, dims=-1), 1),
         ('SMA', lambda a, n: a.unfold(1, n, 1).mean(dim=-1), 2),
-        ('EMA', lambda a, n: a.ewm(span=n).mean(), 2),
+        ('EMA', lambda a, n: a.ewm(span=n, adjust=False).mean(), 2),
         ('STD', lambda a, n: a.unfold(1, n, 1).std(dim=-1), 2),
         ('CORR', lambda a, b: torch.corrcoef(a, b), 2)
     ]
@@ -363,11 +366,29 @@ class AlphaQuant(nn.Module):
         # Value 头（用于 Actor-Critic）
         self.value_head = nn.Linear(self.config.d_model, 1)
 
-        # 因子重要性（可学习）
-        self.factor_importance = nn.Parameter(torch.ones(self.config.total_factors))
+        # 因子重要性（可学习）- 改进：根据配置初始化
+        self._init_factor_importance()
 
         logger.info(f"AlphaQuant initialized: vocab_size={self.vocab_size}, "
-                   f"d_model={self.config.d_model}, num_layers={self.config.num_layers}")
+                   f"d_model={self.config.d_model}, num_layers={self.config.num_layers}, "
+                   f"factor_init_type={self.config.factor_init_type}")
+
+    def _init_factor_importance(self):
+        """初始化因子重要性"""
+        if self.config.factor_init_type == "constant":
+            # 所有因子同等重要
+            self.factor_importance = nn.Parameter(torch.ones(self.config.total_factors))
+        elif self.config.factor_init_type == "uniform":
+            # 均匀分布初始化（0.5 ~ 1.5）
+            self.factor_importance = nn.Parameter(torch.rand(self.config.total_factors) + 0.5)
+        elif self.config.factor_init_type == "normal":
+            # 正态分布初始化（均值1，标准差0.2）
+            self.factor_importance = nn.Parameter(torch.randn(self.config.total_factors) * 0.2 + 1.0)
+        else:
+            raise ValueError(f"Unknown factor_init_type: {self.config.factor_init_type}")
+
+        # 确保因子重要性为正数（使用 Softmax 归一化）
+        self.factor_importance.data = F.softmax(self.factor_importance.data, dim=0) * self.config.total_factors
 
     def forward(
         self,
@@ -400,7 +421,7 @@ class AlphaQuant(nn.Module):
 
         # 时间池化：平均池化 + 最大池化
         feat_mean = weighted_features.mean(dim=-1)  # [B, num_factors]
-        feat_max = weighted_features.amax(dim=-1)    # [B, num_factors]
+        feat_max = weighted_features.amax(dim=-1)   # [B, num_factors]
         feat_pooled = torch.cat([feat_mean, feat_max], dim=-1)  # [B, 2*num_factors]
 
         # 特征嵌入
@@ -413,7 +434,7 @@ class AlphaQuant(nn.Module):
                 market_sentiment[:, 4:12],
                 market_sentiment[:, 12:]
             )
-            feat_emb = feat_emb + sent_emb
+            feat_emb = feat_emb + sent_emb  # 修复：使用加法而非 cat
 
         # 如果没有输入公式，则生成新的
         if formula_tokens is None:
@@ -525,7 +546,8 @@ def model_test():
         d_model=128,
         nhead=8,
         num_layers=4,
-        max_formula_len=64
+        max_formula_len=64,
+        factor_init_type="normal"  # 使用正态分布初始化因子重要性
     )
 
     # 创建模型

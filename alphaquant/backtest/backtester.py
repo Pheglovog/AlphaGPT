@@ -109,7 +109,7 @@ class MarketRules:
     # 交易时间
     TRADING_HOURS = [
         (9, 30, 11, 30),  # 上午
-        (13, 0, 15, 0)    # 下午
+        (13, 0, 15, 0),    # 下午
     ]
 
     # 交易费用
@@ -533,12 +533,15 @@ class BacktestEngine:
 def simple_strategy_example(symbol: str, data: pd.DataFrame) -> List[Order]:
     """
     简单的策略示例：均线交叉
+
+    修复 Bug：确保数据至少有 21 行（prev 需要 -2）
     """
     from uuid import uuid4
 
     orders = []
 
-    if len(data) < 20:
+    # 修复：检查数据行数
+    if len(data) < 21:  # 需要至少 21 行（latest + prev）
         return orders
 
     # 计算 MA 并添加到数据
@@ -547,7 +550,7 @@ def simple_strategy_example(symbol: str, data: pd.DataFrame) -> List[Order]:
     data['ma20'] = data['close'].rolling(20).mean()
 
     latest = data.iloc[-1]
-    prev = data.iloc[-2]
+    prev = data.iloc[-2]  # 修复：现在数据至少有 21 行，-2 是安全的
 
     # MA5 上穿 MA20 买入
     if prev['ma5'] < prev['ma20'] and latest['ma5'] > latest['ma20']:
@@ -585,10 +588,10 @@ def backtest_example():
     np.random.seed(42)
 
     data = pd.DataFrame({
-        'open': 100 + np.cumsum(np.random.randn(n) * 0.5),
-        'high': 100 + np.cumsum(np.random.randn(n) * 0.5) + 1,
-        'low': 100 + np.cumsum(np.random.randn(n) * 0.5) - 1,
-        'close': 100 + np.cumsum(np.random.randn(n) * 0.5),
+        'open': 100 + np.cumsum(np.random.randn(n)) * 0.5,
+        'high': 100 + np.cumsum(np.random.randn(n)) * 0.5 + 1,
+        'low': 100 + np.cumsum(np.random.randn(n)) * 0.5 - 1,
+        'close': 100 + np.cumsum(np.random.randn(n)) * 0.5,
         'volume': np.random.randint(100000, 1000000, n),
         'pre_close': 100
     }, index=dates)
