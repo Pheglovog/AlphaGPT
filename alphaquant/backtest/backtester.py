@@ -534,7 +534,6 @@ def simple_strategy_example(symbol: str, data: pd.DataFrame) -> List[Order]:
     """
     简单的策略示例：均线交叉
     """
-    from datetime import datetime
     from uuid import uuid4
 
     orders = []
@@ -542,9 +541,10 @@ def simple_strategy_example(symbol: str, data: pd.DataFrame) -> List[Order]:
     if len(data) < 20:
         return orders
 
-    # 计算 MA
-    ma5 = data['close'].rolling(5).mean()
-    ma20 = data['close'].rolling(20).mean()
+    # 计算 MA 并添加到数据
+    data = data.copy()
+    data['ma5'] = data['close'].rolling(5).mean()
+    data['ma20'] = data['close'].rolling(20).mean()
 
     latest = data.iloc[-1]
     prev = data.iloc[-2]
