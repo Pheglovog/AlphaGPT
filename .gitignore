@@ -53,6 +53,16 @@ htmlcov/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Model files
+*.pt
+*.pth
+*.ckpt
+*.pkl
+
+# Cache directories
+cache*/
+cache_real/
+
 # OS
 .DS_Store
 Thumbs.db

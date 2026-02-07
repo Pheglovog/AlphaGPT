@@ -49,7 +49,7 @@ class RMSNorm(nn.Module):
         self.weight = nn.Parameter(torch.ones(d_model))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        rms = torch.sqrt(torch.mean(x ** 2, dim=-1, keepdim=True) + self.eps
+        rms = torch.sqrt(torch.mean(x ** 2, dim=-1, keepdim=True) + self.eps)
         return (x / rms) * self.weight
 
 
