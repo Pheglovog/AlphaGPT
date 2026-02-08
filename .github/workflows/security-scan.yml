@@ -1,0 +1,95 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # 每周日凌晨 2:00 (UTC+8) 运行
+    - cron: '0 18 * * 0'
+
+jobs:
+  bandit:
+    name: Bandit Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install bandit
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit
+
+    - name: Run bandit scan
+      run: |
+        bandit -r . \
+          -f json \
+          -o bandit-report.json \
+          --exclude ./venv,./.git,./__pycache__ \
+          || echo "Bandit found issues, but continuing..."
+
+    - name: Upload bandit report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: bandit-report
+        path: bandit-report.json
+
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const report = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
+            const errors = report.results || [];
+
+            if (errors.length > 0) {
+              let comment = '## 🔒 Security Scan Results\n\n';
+              comment += `Found ${errors.length} issue(s):\n\n`;
+
+              const high = errors.filter(e => e.issue_severity === 'HIGH').length;
+              const medium = errors.filter(e => e.issue_severity === 'MEDIUM').length;
+              const low = errors.filter(e => e.issue_severity === 'LOW').length;
+
+              comment += `- 🔴 High: ${high}\n`;
+              comment += `- 🟡 Medium: ${medium}\n`;
+              comment += `- 🔵 Low: ${low}\n\n`;
+
+              comment += '### Details:\n\n';
+              errors.slice(0, 10).forEach(e => {
+                comment += `**${e.issue_severity}**: ${e.test_name}\n`;
+                comment += `- File: ${e.filename}:${e.issue_line}\n`;
+                comment += `- Code: ${e.code}\n\n`;
+              });
+
+              if (errors.length > 10) {
+                comment += `\n... and ${errors.length - 10} more issues. See full report in artifacts.\n`;
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '## ✅ Security Scan Results\n\nNo security issues found!'
+              });
+            }
+          } catch (error) {
+            console.error('Error reading bandit report:', error);
+          }

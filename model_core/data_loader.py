@@ -13,13 +13,27 @@ class CryptoDataLoader:
         
     def load_data(self, limit_tokens=500):
         print("Loading data from SQL...")
+
+        # 验证 limit_tokens 参数
+        try:
+            limit_tokens = int(limit_tokens)
+            limit_tokens = max(1, min(limit_tokens, 10000))  # 限制在 1-10000 之间
+        except (ValueError, TypeError):
+            limit_tokens = 500
+
         top_query = f"""
-        SELECT address FROM tokens 
-        LIMIT {limit_tokens} 
+        SELECT address FROM tokens
+        LIMIT {limit_tokens}
         """
         addrs = pd.read_sql(top_query, self.engine)['address'].tolist()
         if not addrs: raise ValueError("No tokens found.")
-        addr_str = "'" + "','".join(addrs) + "'"
+
+        # 验证并转义地址字符串
+        valid_addrs = [addr.replace("'", "") for addr in addrs if addr]
+        if not valid_addrs:
+            raise ValueError("No valid token addresses found.")
+        addr_str = "'" + "','".join(valid_addrs) + "'"
+
         data_query = f"""
         SELECT time, address, open, high, low, close, volume, liquidity, fdv
         FROM ohlcv

@@ -150,8 +150,8 @@ class DataCache:
         # 将参数转换为排序后的字符串
         param_str = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
 
-        # 生成 MD5 哈希
-        cache_key = hashlib.md5(param_str.encode()).hexdigest()
+        # 生成 MD5 哈希（仅用于缓存键，非安全目的）
+        cache_key = hashlib.md5(param_str.encode(), usedforsecurity=False).hexdigest()
 
         return cache_key
 

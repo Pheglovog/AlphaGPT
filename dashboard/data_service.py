@@ -60,6 +60,13 @@ class DashboardService:
             return {"formula": "Not Trained Yet"}
 
     def get_market_overview(self, limit=50):
+        # 验证参数
+        try:
+            limit = int(limit)
+            limit = max(1, min(limit, 1000))  # 限制在 1-1000 之间
+        except (ValueError, TypeError):
+            limit = 50
+
         query = f"""
         SELECT t.symbol, o.address, o.close, o.volume, o.liquidity, o.fdv, o.time
         FROM ohlcv o
