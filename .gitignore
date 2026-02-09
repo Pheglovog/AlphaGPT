@@ -66,3 +66,7 @@ cache_real/
 # OS
 .DS_Store
 Thumbs.db
+
+# Security scan reports
+reports/bandit-report.json
+reports/security-report.md
