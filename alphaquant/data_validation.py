@@ -5,7 +5,7 @@
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from loguru import logger
 from datetime import datetime, timedelta
 
@@ -195,18 +195,19 @@ class DataCleaner:
         original_nulls = df.isnull().sum().sum()
 
         if method == "ffill":
-            df_clean = df.fillna(method="ffill")
+            df_clean = df.ffill()
         elif method == "bfill":
-            df_clean = df.fillna(method="bfill")
+            df_clean = df.bfill()
         elif method == "mean":
             # 对数值列使用均值填充
+            df_clean = df.copy()
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             for col in numeric_cols:
                 mean_value = df[col].mean()
-                df_clean[col].fillna(mean_value, inplace=True)
+                df_clean[col] = df_clean[col].fillna(mean_value)
         else:
             logger.warning(f"未知的填充方法：{method}，使用 ffill")
-            df_clean = df.fillna(method="ffill")
+            df_clean = df.ffill()
 
         filled_nulls = original_nulls - df_clean.isnull().sum().sum()
         self.cleaning_stats["nulls_filled"] = filled_nulls
