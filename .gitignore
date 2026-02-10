@@ -70,3 +70,5 @@ Thumbs.db
 # Security scan reports
 reports/bandit-report.json
 reports/security-report.md
+*.json
+bandit-report*.txt

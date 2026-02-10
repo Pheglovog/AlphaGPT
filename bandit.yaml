@@ -1,0 +1,46 @@
+# Bandit 安全扫描配置
+# 参考：https://bandit.readthedocs.io/
+
+# 排除的目录和文件
+exclude_dirs:
+  - /venv
+  - /__pycache__
+  - /.git
+  - /build
+  - /dist
+
+# 排除的测试 ID（这些测试在我们的上下文中是安全的）
+# B301: pickle - 仅用于本地缓存，不处理不受信任的数据
+# B303: md5 - 仅用于缓存键生成，已使用 usedforsecurity=False
+# B403: pickle 模块警告 - 同 B301
+# B404: subprocess 模块警告 - 仅用于本地命令
+# B603: subprocess 调用 - 仅用于受信任的输入
+skips:
+  - B301
+  - B303
+  - B403
+  - B404
+  - B603
+
+# 测试集合
+tests:
+  # 包含所有测试（跳过的除外）
+  - '*'
+
+# 输出格式
+output_format: screen
+
+# 报告文件
+output_file: bandit-report.txt
+
+# 颜色输出
+color: true
+
+# 显示行号
+line_numbers: true
+
+# 显示严重性
+severity: high,medium,low
+
+# 显示置信度
+confidence: high,medium,low
