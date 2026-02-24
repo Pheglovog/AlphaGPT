@@ -62,6 +62,8 @@ htmlcov/
 # Cache directories
 cache*/
 cache_real/
+data_cache/
+
 
 # OS
 .DS_Store
