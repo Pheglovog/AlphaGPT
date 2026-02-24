@@ -11,7 +11,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 from alphaquant.data_validation import DataValidator
-from alphaquant.data_cache import DataCache
+from alphaquant.data_cache import CacheManager
 
 
 class TestAlphaGPTPerformance:
@@ -67,13 +67,12 @@ class TestAlphaGPTPerformance:
 
     def test_cache_write_performance(self):
         """测试缓存写入性能"""
-        cache = DataCache()
+        cache = CacheManager()
         start = time.time()
 
         for i in range(100):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
             test_data = pd.DataFrame({"close": [1800.0 + i * 10.0]})
-            cache.set(test_params, test_data)
+            cache.set(f"test_key_{i}", test_data, ttl=3600)
 
         end = time.time()
         elapsed = end - start
@@ -83,19 +82,17 @@ class TestAlphaGPTPerformance:
 
     def test_cache_read_performance(self):
         """测试缓存读取性能"""
-        cache = DataCache()
+        cache = CacheManager()
 
         # 预先写入
         for i in range(100):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
             test_data = pd.DataFrame({"close": [1800.0 + i * 10.0]})
-            cache.set(test_params, test_data)
+            cache.set(f"test_key_{i}", test_data, ttl=3600)
 
         start = time.time()
 
         for i in range(100):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
-            result = cache.get(test_params)
+            result = cache.get(f"test_key_{i}")
             assert result is not None
 
         end = time.time()

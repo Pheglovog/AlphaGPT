@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 from loguru import logger
 from solders.pubkey import Pubkey
 from solana.rpc.types import TokenAccountOpts
@@ -8,13 +9,18 @@ from .rpc_handler import QuickNodeClient
 from .jupiter import JupiterAggregator
 
 class SolanaTrader:
-    def __init__(self):
+    def __init__(self) -> None:
         self.rpc = QuickNodeClient()
         self.jup = JupiterAggregator()
         self.is_running = True
         self.TOKEN_PROGRAM_ID = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
-    async def buy(self, token_address: str, amount_sol: float, slippage_bps=500):
+    async def buy(
+        self,
+        token_address: str,
+        amount_sol: float,
+        slippage_bps: int = 500
+    ) -> bool:
         logger.info(f"Executing BUY: {amount_sol} SOL -> {token_address}")
         balance = await self.rpc.get_balance()
         if balance < amount_sol + 0.02:
@@ -46,7 +52,12 @@ class SolanaTrader:
             return True
         return False
 
-    async def sell(self, token_address: str, percentage: float = 1.0, slippage_bps=500):
+    async def sell(
+        self,
+        token_address: str,
+        percentage: float = 1.0,
+        slippage_bps: int = 500
+    ) -> bool:
         logger.info(f"Executing SELL: {percentage*100}% of {token_address} -> SOL")
         raw_balance = 0
         try:
@@ -97,7 +108,7 @@ class SolanaTrader:
             logger.error(f"Sell execution failed: {e}")
         return False
 
-    async def close(self):
+    async def close(self) -> None:
         await self.rpc.close()
         await self.jup.close()
 

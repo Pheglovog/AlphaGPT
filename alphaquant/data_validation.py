@@ -278,6 +278,36 @@ class DataCleaner:
 
         return df_clean
 
+    def remove_invalid_rows(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        移除无效行（包含 NaN、None 或无效值的行）
+
+        Args:
+            df: 输入 DataFrame
+            columns: 要检查的列列表（None 表示检查所有列）
+
+        Returns:
+            清洗后的 DataFrame
+        """
+        original_rows = len(df)
+
+        if columns is None:
+            # 检查所有列
+            invalid_mask = df.isnull().any(axis=1)
+        else:
+            # 检查指定列
+            invalid_mask = df[columns].isnull().any(axis=1)
+
+        df_clean = df[~invalid_mask].reset_index(drop=True)
+        invalid_removed = invalid_mask.sum()
+
+        self.cleaning_stats["invalid_rows_removed"] = invalid_removed
+        self.cleaning_stats["rows_cleaned"] += invalid_removed
+
+        logger.info(f"移除 {invalid_removed} 个无效行")
+
+        return df_clean
+
     def normalize_prices(self, df: pd.DataFrame, reference_date: str) -> pd.DataFrame:
         """
         标准化价格（使用调整后开盘价）

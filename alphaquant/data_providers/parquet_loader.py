@@ -23,7 +23,7 @@ except ImportError:
 class ParquetDataLoader:
     """Parquet 数据加载器 - 更快的 I/O 操作"""
 
-    def __init__(self, cache_dir: str = "./cache"):
+    def __init__(self, cache_dir: str = "./cache") -> None:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 

@@ -27,8 +27,12 @@ from .file_cache import FileCache
 from .memory_cache import MemoryCache
 from .redis_cache import RedisCache, is_redis_available
 
+# 为了向后兼容，DataCache 是 CacheManager 的别名
+DataCache = CacheManager
+
 __all__ = [
     'CacheManager',
+    'DataCache',  # 向后兼容
     'FileCache',
     'MemoryCache',
     'RedisCache',

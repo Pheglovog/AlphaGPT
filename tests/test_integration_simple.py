@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 导入实际存在的类
 from alphaquant.data_validation import DataValidator
-from alphaquant.data_cache import DataCache
+from alphaquant.data_cache import CacheManager
 
 
 class TestAlphaGPTIntegrationSimple:
@@ -111,31 +111,31 @@ class TestAlphaGPTIntegrationSimple:
 
     def test_cache_single_operation(self):
         """测试单个缓存操作"""
-        cache = DataCache()
+        cache = CacheManager()
 
         test_params = {"symbol": "600519.SH", "start": "20240101"}
         test_data = pd.DataFrame({"close": [1800.0]})
 
-        cache.set(test_params, test_data)
-        result = cache.get(test_params)
+        cache.set("test_key", test_data, ttl=3600)
+        result = cache.get("test_key")
 
         assert result is not None
         assert len(result) == len(test_data)
 
     def test_cache_multiple_operations(self):
         """测试多个缓存操作"""
-        cache = DataCache()
+        cache = CacheManager()
 
         # 批量写入
         for i in range(10):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
+            test_key = f"stock_data_60000{i}_SH_20240101"
             test_data = pd.DataFrame({"close": [1800.0 + i * 10.0]})
-            cache.set(test_params, test_data)
+            cache.set(test_key, test_data, ttl=3600)
 
         # 批量读取
         for i in range(10):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
-            result = cache.get(test_params)
+            test_key = f"stock_data_60000{i}_SH_20240101"
+            result = cache.get(test_key)
             assert result is not None
             assert len(result) == 1
 
@@ -157,16 +157,15 @@ class TestDataCachePerformance:
 
     def test_cache_performance(self):
         """测试缓存性能"""
-        cache = DataCache()
+        cache = CacheManager()
 
         # 测试批量操作
         import time
         start = time.time()
 
         for i in range(100):
-            test_params = {"symbol": f"60000{i}.SH", "start": "20240101"}
             test_data = pd.DataFrame({"close": [1800.0 + i]})
-            cache.set(test_params, test_data)
+            cache.set(f"test_key_{i}", test_data, ttl=3600)
 
         end = time.time()
         elapsed = end - start

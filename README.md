@@ -263,6 +263,24 @@ AlphaGPT/
 
 ## 📚 文档
 
+### 主要文档
+
+| 文档 | 说明 |
+|-----|------|
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
+| [API.md](API.md) | API 文档 |
+
+### 性能优化文档
+
+| 文档 | 说明 |
+|-----|------|
+| [docs/PERFORMANCE_BENCHMARK.md](docs/PERFORMANCE_BENCHMARK.md) | 性能基准文档（15KB） |
+| [docs/cache-optimization.md](docs/cache-optimization.md) | 缓存优化指南 |
+| [docs/parallel-processing.md](docs/parallel-processing.md) | 并行处理指南 |
+| [docs/memory-optimization.md](docs/memory-optimization.md) | 内存优化指南 |
+
+### 其他文档
+
 | 文档 | 说明 |
 |-----|------|
 | [OPENSPEC.md](OPENSPEC.md) | OpenSpec 工作流程 |
