@@ -1,5 +1,4 @@
-"""
-内存优化测试
+"""内存优化测试
 
 测试内存优化功能
 """
@@ -207,7 +206,9 @@ def test_track_memory_decorator():
     df['ma10'] = df['close'].rolling(10).mean()
     df['momentum'] = df['close'] / df['close'].shift(10) - 1
 
-    return df
+    # 测试通过验证
+    assert df is not None
+    assert len(df) > 0
 
 
 def test_memory_leak_detector():
