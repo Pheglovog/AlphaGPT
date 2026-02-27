@@ -113,6 +113,8 @@ class TechnicalIndicators:
 
         # 填充 nan 为 50
         rsi = np.nan_to_num(rsi, nan=50)
+        # 修复: 在开头填充一个值以保持长度一致
+        rsi = np.concatenate([[50], rsi])
         return rsi
 
     @staticmethod
@@ -192,6 +194,8 @@ class TechnicalIndicators:
         """
         close_change = np.diff(close) / (close[:-1] + 1e-6)
         vpt = np.cumsum(close_change * volume[1:])
+        # 修复: 在开头填充 0 以保持长度一致
+        vpt = np.concatenate([[0], vpt])
 
         return vpt
 
@@ -279,6 +283,8 @@ class ChinaFactorEngine:
         pad = torch.zeros_like(c)[..., :20]
         c_pad = torch.cat([pad, c], dim=-1)
         ma = c_pad.unfold(1, 20, 1).mean(dim=-1)
+        # 修复: unfold 产生 n+1 个窗口，需要切片到原始长度
+        ma = ma[..., :c.shape[-1]]
         dev = (c - ma) / (ma + 1e-9)
         deviation = torch.clamp(dev, -5.0, 5.0)
 

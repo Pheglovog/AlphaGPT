@@ -340,8 +340,8 @@ class AlphaQuant(nn.Module):
         self.vocab = self.BASIC_FACTORS + self.ADVANCED_FACTORS + [op[0] for op in self.OPS]
         self.vocab_size = len(self.vocab)
 
-        # 特征嵌入
-        self.feature_emb = nn.Linear(self.config.total_factors, self.config.d_model)
+        # 特征嵌入 (2 * total_factors 因为 mean+max pooling)
+        self.feature_emb = nn.Linear(self.config.total_factors * 2, self.config.d_model)
 
         # 公式 Token 嵌入
         self.token_emb = nn.Embedding(self.vocab_size, self.config.d_model)
@@ -514,7 +514,7 @@ class AlphaQuant(nn.Module):
                     generated
                 )
 
-                logits = output['logits'][:, -1, :] / temperature
+                logits = output['logits'] / temperature  # 已经是 [B, vocab_size]
 
                 # Top-K 采样
                 if top_k is not None:

@@ -105,7 +105,7 @@ def example_backtest():
     engine = BacktestEngine(initial_capital=100000.0)
 
     # 生成模拟数据
-    dates = pd.date_range('2024-01-01', '2024-06-30', freq='D')
+    dates = pd.date_range('2024-01-01 10:00', '2024-06-30 10:00', freq='D')
     n = len(dates)
 
     np.random.seed(42)
@@ -136,8 +136,9 @@ def example_backtest():
             return orders
 
         # 计算 MA
-        ma5 = history['close'].rolling(5).mean()
-        ma20 = history['close'].rolling(20).mean()
+        history = history.copy()
+        history['ma5'] = history['close'].rolling(5).mean()
+        history['ma20'] = history['close'].rolling(20).mean()
 
         latest = history.iloc[-1]
         prev = history.iloc[-2]
